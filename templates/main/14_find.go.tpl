@@ -44,10 +44,11 @@ func Find{{$alias.UpSingular}}GP({{if not .NoContext}}ctx context.Context, {{end
 func Find{{$alias.UpSingular}}({{if .NoContext}}exec boil.Executor{{else}}ctx context.Context, exec boil.ContextExecutor{{end}}, {{$pkArgs}}, selectCols ...string) (*{{$alias.UpSingular}}, error) {
 	{{$alias.DownSingular}}Obj := &{{$alias.UpSingular}}{}
 
-	sel := "*"
-	if len(selectCols) > 0 {
-		sel = strings.Join(strmangle.IdentQuoteSlice(dialect.LQ, dialect.RQ, selectCols), ",")
+	if len(selectCols) == 0 {
+		selectCols = {{$alias.DownSingular}}AllColumns
 	}
+
+	sel = strings.Join(strmangle.IdentQuoteSlice(dialect.LQ, dialect.RQ, selectCols), ",")
 	query := fmt.Sprintf(
 		"select %s from {{.Table.Name | .SchemaTable}} where {{if .Dialect.UseIndexPlaceholders}}{{whereClause .LQ .RQ 1 .Table.PKey.Columns}}{{else}}{{whereClause .LQ .RQ 0 .Table.PKey.Columns}}{{end}}{{if and .AddSoftDeletes $canSoftDelete}} and {{or $.AutoColumns.Deleted "deleted_at" | $.Quotes}} is null{{end}}", sel,
 	)
